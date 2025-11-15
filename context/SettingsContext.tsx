@@ -12,6 +12,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 const DEFAULTS: Settings = {
   provider: 'gemini',
   ollamaCloudKey: '',
+  ollamaCloudUrl: 'https://api.ollama.com',
   ollamaSelfHostedUrl: 'http://127.0.0.1:11434',
   ollamaModel: 'llava:latest',
   ollamaTtsUrl: 'http://127.0.0.1:5002/api/tts',

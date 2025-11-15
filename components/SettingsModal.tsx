@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { Icon } from './Icon';
 import type { Settings, ProviderState } from '../types';
+import { listOllamaModels } from '../services/aiService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -12,10 +12,45 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const { settings, setSettings } = useSettings();
   const [localSettings, setLocalSettings] = useState<Settings>(settings);
+  const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings, isOpen]);
+
+  // Fetch Ollama models when provider is selected
+  useEffect(() => {
+    if (!isOpen || !localSettings.provider.startsWith('ollama')) {
+      setOllamaModels([]);
+      setModelsError(null);
+      return;
+    }
+
+    const fetchModels = async () => {
+      setIsLoadingModels(true);
+      setModelsError(null);
+      try {
+        const modelList = await listOllamaModels(localSettings);
+        setOllamaModels(modelList);
+        if (modelList.length === 0) {
+          setModelsError("No models found. Check your Ollama server URL and make sure it's running.");
+        }
+      } catch (error: any) {
+        setModelsError(`Failed to fetch models: ${error.message}`);
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+    
+    // Debounce fetching to avoid spamming while the user types the URL
+    const debounceTimeout = setTimeout(fetchModels, 300);
+
+    return () => clearTimeout(debounceTimeout);
+
+  }, [isOpen, localSettings.provider, localSettings.ollamaSelfHostedUrl, localSettings.ollamaCloudUrl, localSettings.ollamaCloudKey]);
+
 
   const handleSave = () => {
     setSettings(localSettings);
@@ -35,7 +70,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-light dark:bg-secondary rounded-lg shadow-xl w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
           <h2 className="text-xl font-semibold">Settings</h2>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -57,7 +92,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <div className="p-4 border rounded-md dark:border-gray-600 space-y-4">
               <h3 className="font-semibold text-md">Ollama Configuration</h3>
                {localSettings.provider === 'ollama_cloud' && (
-                <InputField label="API Key" name="ollamaCloudKey" value={localSettings.ollamaCloudKey} onChange={handleInputChange} type="password" placeholder="Enter your Ollama Cloud API key" />
+                <>
+                  <InputField label="Cloud URL" name="ollamaCloudUrl" value={localSettings.ollamaCloudUrl} onChange={handleInputChange} placeholder="Enter your Ollama Cloud URL" />
+                  <InputField label="API Key" name="ollamaCloudKey" value={localSettings.ollamaCloudKey} onChange={handleInputChange} type="password" placeholder="Enter your Ollama Cloud API key" />
+                   <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Note: This is for Ollama's official cloud service or a compatible hosted provider. The URL may vary.
+                  </p>
+                </>
               )}
                {localSettings.provider === 'ollama_self_hosted' && (
                 <>
@@ -68,7 +109,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   </p>
                 </>
               )}
-               <InputField label="Model Name" name="ollamaModel" value={localSettings.ollamaModel} onChange={handleInputChange} placeholder="e.g., llava:latest or llama3" />
+               <ModelSelector
+                value={localSettings.ollamaModel}
+                onChange={handleInputChange}
+                models={ollamaModels}
+                isLoading={isLoadingModels}
+                error={modelsError}
+              />
                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Note: For image analysis, ensure you are using a vision-capable model like LLaVA.
                </p>
@@ -103,6 +150,36 @@ const RadioOption: React.FC<{id: string, label: string, provider: ProviderState,
 const InputField: React.FC<{label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, type?: string}> = ({label, name, value, onChange, placeholder, type="text"}) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-        <input type={type} name={name} id={name} value={value} onChange={onChange} placeholder={placeholder} className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
+        <input type={type} name={name} id={name} value={value} onChange={onChange} placeholder={placeholder} className="mt-1 block w-full px-3 py-2 bg-light dark:bg-dark border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
     </div>
 );
+
+const ModelSelector: React.FC<{
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  models: string[];
+  isLoading: boolean;
+  error: string | null;
+}> = ({ value, onChange, models, isLoading, error }) => {
+  return (
+    <div>
+      <label htmlFor="ollamaModel" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model Name</label>
+      <input
+        type="text"
+        name="ollamaModel"
+        id="ollamaModel"
+        value={value}
+        onChange={onChange}
+        placeholder={isLoading ? "Loading models..." : "Select or type a model name"}
+        className="mt-1 block w-full px-3 py-2 bg-light dark:bg-dark border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+        list="ollama-models-list"
+        disabled={isLoading}
+      />
+      <datalist id="ollama-models-list">
+        {models.map(model => <option key={model} value={model} />)}
+      </datalist>
+      {isLoading && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Fetching available models...</p>}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+};

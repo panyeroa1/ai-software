@@ -133,7 +133,7 @@ export const Chatbot: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="flex flex-col h-full bg-light dark:bg-secondary rounded-lg shadow-lg">
       <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-semibold">AI Chatbot</h2>
         <button onClick={handleNewChat} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">

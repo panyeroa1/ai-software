@@ -20,7 +20,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ features, activeFeature, setAc
       <aside className={`
         fixed inset-y-0 left-0 z-30
         h-full flex flex-col
-        bg-white dark:bg-gray-800 shadow-lg
+        bg-light dark:bg-secondary shadow-lg
         transition-all duration-300 ease-in-out
         transform ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 md:flex-shrink-0
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ features, activeFeature, setAc
 
       {/* Mobile Hamburger Button */}
       <button
-        className="fixed top-4 left-4 z-20 md:hidden p-2 rounded-md bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
+        className="fixed top-4 left-4 z-20 md:hidden p-2 rounded-md bg-light/50 dark:bg-secondary/50 backdrop-blur-sm"
         onClick={() => setIsOpen(true)}
       >
         <Icon name="menu" />

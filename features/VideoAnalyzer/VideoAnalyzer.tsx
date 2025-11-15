@@ -92,20 +92,20 @@ export const VideoAnalyzer: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full space-y-4">
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-2">Video Analysis</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Upload a short video and ask a question about its content.</p>
             </div>
 
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="flex flex-col items-center justify-center p-4 bg-light dark:bg-secondary rounded-lg shadow">
                     {videoUrl ? (
                         <video src={videoUrl} controls className="max-w-full max-h-full rounded-lg" />
                     ) : (
                         <FileInput onFileSelect={handleFileSelect} accept="video/*" label="Upload Video" />
                     )}
                 </div>
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto">
+                <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow overflow-y-auto">
                     {isLoading ? (
                         <div className="flex items-center justify-center h-full">
                             <Spinner text={status} size="lg" />
@@ -120,7 +120,7 @@ export const VideoAnalyzer: React.FC = () => {
                 </div>
             </div>
 
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
                 <PromptInput
                     value={prompt}
                     onChange={setPrompt}

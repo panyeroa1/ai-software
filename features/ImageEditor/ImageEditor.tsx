@@ -57,13 +57,13 @@ export const ImageEditor: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-       <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+       <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-2">Image Editing</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Upload an image and tell me how you'd like to change it.</p>
       </div>
       
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="flex flex-col items-center justify-center p-4 bg-light dark:bg-secondary rounded-lg shadow">
           <h3 className="text-lg font-medium mb-2">Original</h3>
           {originalImage ? (
             <img src={originalImage.url} alt="Original" className="max-w-full max-h-full object-contain rounded-lg" />
@@ -71,7 +71,7 @@ export const ImageEditor: React.FC = () => {
             <FileInput onFileSelect={handleFileSelect} accept="image/*" label="Upload Image" />
           )}
         </div>
-        <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="flex flex-col items-center justify-center p-4 bg-light dark:bg-secondary rounded-lg shadow">
            <h3 className="text-lg font-medium mb-2">Edited</h3>
            {isLoading ? (
             <Spinner text="Applying edits..." size="lg" />
@@ -85,7 +85,7 @@ export const ImageEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <PromptInput
           value={prompt}
           onChange={setPrompt}

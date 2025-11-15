@@ -64,7 +64,7 @@ export const GroundedSearch: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-2">Grounded Search</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Ask questions about recent events, news, or places to get answers grounded in real-world data.</p>
         <div className="mt-4 flex items-center space-x-4">
@@ -79,7 +79,7 @@ export const GroundedSearch: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto">
+      <div className="flex-1 p-4 bg-light dark:bg-secondary rounded-lg shadow overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Spinner text="Searching..." size="lg" />
@@ -110,7 +110,7 @@ export const GroundedSearch: React.FC = () => {
         )}
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <PromptInput
           value={prompt}
           onChange={setPrompt}

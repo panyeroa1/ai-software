@@ -27,7 +27,7 @@ const FeatureNotSupported: React.FC = () => {
   const providerName = PROVIDER_NAMES[settings.provider] || 'the selected provider';
   
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+    <div className="flex flex-col items-center justify-center h-full text-center bg-light dark:bg-secondary rounded-lg shadow-lg p-8">
       <Icon name="brain" className="w-16 h-16 text-primary mb-4" />
       <h2 className="text-2xl font-bold mb-2">Feature Not Supported</h2>
       <p className="text-gray-600 dark:text-gray-400">
@@ -77,7 +77,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans">
+      <div className="flex h-screen bg-gray-100 dark:bg-dark font-sans">
         <Sidebar
           features={FEATURES}
           activeFeature={activeFeature}

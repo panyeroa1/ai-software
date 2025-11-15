@@ -53,20 +53,20 @@ export const ImageAnalyzer: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-2">Image Analysis</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Upload an image and ask a question about it.</p>
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="flex flex-col items-center justify-center p-4 bg-light dark:bg-secondary rounded-lg shadow">
           {image ? (
             <img src={image.url} alt="To be analyzed" className="max-w-full max-h-full object-contain rounded-lg" />
           ) : (
             <FileInput onFileSelect={handleFileSelect} accept="image/*" label="Upload Image" />
           )}
         </div>
-        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto">
+        <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Spinner text="Analyzing..." size="lg" />
@@ -81,7 +81,7 @@ export const ImageAnalyzer: React.FC = () => {
         </div>
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <PromptInput
           value={prompt}
           onChange={setPrompt}

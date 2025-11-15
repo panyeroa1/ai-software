@@ -1,4 +1,3 @@
-
 import type { Settings, AspectRatio } from '../types';
 import * as gemini from './geminiService';
 import * as ollama from './providers/ollama';
@@ -118,4 +117,12 @@ export const createLiveSession = (callbacks: {
     }
     // Live sessions are very specific to the provider's SDK, so we throw here for Ollama.
     return Promise.reject(new Error(NOT_SUPPORTED_ERROR));
+};
+
+// Ollama specific functions
+export const listOllamaModels = (settings: Settings): Promise<string[]> => {
+    if (settings.provider.startsWith('ollama')) {
+        return ollama.listModels(settings);
+    }
+    return Promise.resolve([]);
 };

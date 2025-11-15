@@ -153,12 +153,12 @@ export const TextToSpeech: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-2">Text to Speech</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Enter text to generate natural-sounding speech.</p>
       </div>
 
-      <div className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow flex flex-col items-center justify-center">
+      <div className="flex-1 p-4 bg-light dark:bg-secondary rounded-lg shadow flex flex-col items-center justify-center">
         {isLoading ? (
           <Spinner text="Generating audio..." size="lg" />
         ) : error ? (
@@ -170,7 +170,7 @@ export const TextToSpeech: React.FC = () => {
         )}
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <PromptInput
           value={text}
           onChange={setText}

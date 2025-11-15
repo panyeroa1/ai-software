@@ -127,12 +127,12 @@ export const AudioTranscription: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full space-y-4">
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-2">Audio Transcription</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Click the microphone to start transcribing your speech in real-time.</p>
             </div>
             
-            <div className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto">
+            <div className="flex-1 p-4 bg-light dark:bg-secondary rounded-lg shadow overflow-y-auto">
                 {error && <p className="text-red-500">{error}</p>}
                 <p className="whitespace-pre-wrap">{transcription || (isRecording ? "Listening..." : "Transcription will appear here.")}</p>
             </div>

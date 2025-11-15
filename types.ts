@@ -6,6 +6,7 @@ export type ProviderState = 'gemini' | 'ollama_cloud' | 'ollama_self_hosted';
 export interface Settings {
   provider: ProviderState;
   ollamaCloudKey: string;
+  ollamaCloudUrl: string;
   ollamaSelfHostedUrl: string;
   ollamaModel: string;
   ollamaTtsUrl: string;

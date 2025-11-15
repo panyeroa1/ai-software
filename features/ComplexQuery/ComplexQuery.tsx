@@ -31,12 +31,12 @@ export const ComplexQuery: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-2">Complex Query</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Ask complex questions that require deep reasoning or planning. This mode uses Gemini Pro with an enhanced thinking budget.</p>
       </div>
 
-      <div className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto">
+      <div className="flex-1 p-4 bg-light dark:bg-secondary rounded-lg shadow overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Spinner text="Thinking deeply..." size="lg" />
@@ -50,7 +50,7 @@ export const ComplexQuery: React.FC = () => {
         )}
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <PromptInput
           value={prompt}
           onChange={setPrompt}

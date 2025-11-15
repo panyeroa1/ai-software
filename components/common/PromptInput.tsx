@@ -21,7 +21,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ value, onChange, onSub
   };
 
   return (
-    <div className="flex items-center p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+    <div className="flex items-center p-2 bg-gray-100 dark:bg-secondary rounded-lg">
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}

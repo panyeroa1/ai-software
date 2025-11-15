@@ -1,4 +1,3 @@
-
 import type { Settings } from '../../types';
 
 type OllamaMessage = {
@@ -16,8 +15,7 @@ const getOllamaConfig = (settings: Settings): { url: string; headers: Record<str
     if (settings.provider === 'ollama_self_hosted') {
         url = settings.ollamaSelfHostedUrl;
     } else if (settings.provider === 'ollama_cloud') {
-        // This is a hypothetical endpoint. Replace with the actual cloud URL if available.
-        url = 'https://api.ollama.com'; 
+        url = settings.ollamaCloudUrl;
         if(settings.ollamaCloudKey) {
             headers['Authorization'] = `Bearer ${settings.ollamaCloudKey}`;
         }
@@ -129,4 +127,51 @@ export const generateSpeech = async (text: string, settings: Settings): Promise<
     const base64Audio = await blobToBase64(audioBlob);
 
     return base64Audio;
+};
+
+export const listModels = async (settings: Settings): Promise<string[]> => {
+    const { url, headers } = getOllamaConfig(settings);
+    
+    // Silently return if URL is incomplete to avoid errors while user is typing.
+    if (!url || !url.startsWith('http')) {
+        return [];
+    }
+
+    try {
+        const endpoint = new URL('/api/tags', url).toString();
+
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: headers,
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text().catch(() => `(could not read response body)`);
+            throw new Error(`Server responded with status ${response.status}: ${errorBody}`);
+        }
+
+        const data = await response.json();
+        if (data && data.models && Array.isArray(data.models)) {
+            return data.models.map((model: any) => model.name).sort();
+        }
+        return [];
+    } catch (error) {
+        console.error('Error fetching Ollama models:', error);
+        
+        if (error instanceof TypeError) {
+             if (error.message.includes('Invalid URL')) {
+                 throw new Error('The Ollama URL is invalid. Please check the format.');
+            }
+            // Catch fetch's generic network error and provide a more helpful message.
+            if (error.message.includes('Failed to fetch')) {
+                throw new Error("Could not connect to the Ollama server. Please verify the URL, ensure the server is running, and check for CORS issues.");
+            }
+        }
+        
+        // Re-throw if it's a custom error we already created, or wrap it.
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error('An unexpected error occurred while fetching models.');
+    }
 };

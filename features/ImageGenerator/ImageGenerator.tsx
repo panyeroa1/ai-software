@@ -34,12 +34,12 @@ export const ImageGenerator: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-2">Image Generation</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">Describe the image you want to create. Be as detailed as you like.</p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="flex-1 flex items-center justify-center p-4 bg-light dark:bg-secondary rounded-lg shadow">
         {isLoading ? (
           <Spinner text="Generating your masterpiece..." size="lg" />
         ) : error ? (
@@ -55,7 +55,7 @@ export const ImageGenerator: React.FC = () => {
         )}
       </div>
 
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow space-y-4">
+      <div className="p-4 bg-light dark:bg-secondary rounded-lg shadow space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
           {ASPECT_RATIOS.map((ratio) => (
             <button
