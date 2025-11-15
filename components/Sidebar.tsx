@@ -7,9 +7,10 @@ interface SidebarProps {
   features: Feature[];
   activeFeature: Feature;
   setActiveFeature: (feature: Feature) => void;
+  onSettingsClick: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ features, activeFeature, setActiveFeature }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ features, activeFeature, setActiveFeature, onSettingsClick }) => {
   const [isOpen, setIsOpen] = useState(false); // For mobile overlay
   const [isCollapsed, setIsCollapsed] = useState(false); // For desktop collapse
 
@@ -67,11 +68,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ features, activeFeature, setAc
           ))}
         </nav>
 
-        {/* Collapse Toggle */}
-        <div className="hidden md:block p-2 border-t border-gray-200 dark:border-gray-700">
+        {/* Footer with Settings and Collapse */}
+        <div className="hidden md:flex p-2 border-t border-gray-200 dark:border-gray-700 items-center">
+          <button
+            onClick={onSettingsClick}
+            className="flex-shrink-0 p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            aria-label="Open settings"
+          >
+             <Icon name="settings" />
+          </button>
+          <div className="flex-grow" />
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full flex items-center justify-center p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <Icon name={isCollapsed ? 'chevron-right' : 'chevron-left'} />

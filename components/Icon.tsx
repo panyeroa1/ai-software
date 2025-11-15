@@ -1,6 +1,7 @@
+
 import React from 'react';
 
-type IconName = 'chat' | 'image' | 'edit' | 'scan' | 'video' | 'search' | 'brain' | 'audio' | 'mic' | 'spark' | 'menu' | 'close' | 'send' | 'upload' | 'play' | 'stop' | 'location' | 'web' | 'chevron-left' | 'chevron-right' | 'plus';
+type IconName = 'chat' | 'image' | 'edit' | 'scan' | 'video' | 'search' | 'brain' | 'audio' | 'mic' | 'spark' | 'menu' | 'close' | 'send' | 'upload' | 'play' | 'stop' | 'location' | 'web' | 'chevron-left' | 'chevron-right' | 'plus' | 'settings';
 
 interface IconProps {
   name: IconName;
@@ -30,6 +31,7 @@ export const Icon: React.FC<IconProps> = ({ name, className = 'w-6 h-6' }) => {
     'chevron-left': <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>,
     'chevron-right': <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>,
     plus: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
+    settings: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-1.003 1.11-1.226.554-.223 1.197-.223 1.75 0 .554.223 1.02.684 1.11 1.226M9.594 3.94c-.09.542-.56 1.003-1.11 1.226-.554.223-1.197.223-1.75 0-.554-.223-1.02-.684-1.11-1.226m2.22 0v1.543m0 0V21m0-15.513a2.25 2.25 0 0 0-1.5 2.143v6.158a2.25 2.25 0 0 0 1.5 2.143m0 0c1.243.372 2.268.372 3.51 0m-3.51 0a2.25 2.25 0 0 1-1.5-2.143v-6.158a2.25 2.25 0 0 1 1.5-2.143m0 0c.09-.542.56-1.003 1.11-1.226.554-.223 1.197-.223 1.75 0 .554.223 1.02.684 1.11 1.226m-2.22 0V21" /></svg>,
   };
 
   return icons[name] || null;

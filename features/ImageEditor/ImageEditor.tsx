@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { editImage } from '../../services/geminiService';
+import { editImage } from '../../services/aiService';
 import { FileInput } from '../../components/common/FileInput';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
+import { useSettings } from '../../context/SettingsContext';
 
 const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> => {
   return new Promise((resolve, reject) => {
@@ -19,6 +20,7 @@ const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> =
 };
 
 export const ImageEditor: React.FC = () => {
+  const { settings } = useSettings();
   const [originalImage, setOriginalImage] = useState<{ file: File; url: string; base64: { data: string; mimeType: string } } | null>(null);
   const [editedImageUrl, setEditedImageUrl] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
@@ -39,15 +41,15 @@ export const ImageEditor: React.FC = () => {
     setEditedImageUrl(null);
 
     try {
-      const resultBase64 = await editImage(prompt, originalImage.base64);
+      const resultBase64 = await editImage(prompt, originalImage.base64, settings);
       if (resultBase64) {
         setEditedImageUrl(`data:image/png;base64,${resultBase64}`);
       } else {
         throw new Error('No image data returned from API.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Image editing failed:', err);
-      setError('Failed to edit image. Please try another prompt or image.');
+      setError(`Failed to edit image: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

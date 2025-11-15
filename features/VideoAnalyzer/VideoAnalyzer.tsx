@@ -1,9 +1,10 @@
 
 import React, { useState, useRef } from 'react';
-import { analyzeVideoFrames } from '../../services/geminiService';
+import { analyzeVideoFrames } from '../../services/aiService';
 import { FileInput } from '../../components/common/FileInput';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
+import { useSettings } from '../../context/SettingsContext';
 
 const extractFramesFromVideo = (
     videoFile: File,
@@ -53,6 +54,7 @@ const extractFramesFromVideo = (
 };
 
 export const VideoAnalyzer: React.FC = () => {
+    const { settings } = useSettings();
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [prompt, setPrompt] = useState('Summarize this video.');
@@ -77,11 +79,11 @@ export const VideoAnalyzer: React.FC = () => {
             setStatus('Extracting frames...');
             const frames = await extractFramesFromVideo(videoFile);
             setStatus('Analyzing video...');
-            const result = await analyzeVideoFrames(prompt, frames);
+            const result = await analyzeVideoFrames(prompt, frames, settings);
             setAnalysis(result);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Video analysis failed:', err);
-            setError('Failed to analyze video. Please try again.');
+            setError(`Failed to analyze video: ${err.message}`);
         } finally {
             setIsLoading(false);
             setStatus('');

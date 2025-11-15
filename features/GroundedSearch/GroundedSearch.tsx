@@ -1,15 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
-import { groundedSearch } from '../../services/geminiService';
+import { groundedSearch } from '../../services/aiService';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
 import { Icon } from '../../components/Icon';
+import { useSettings } from '../../context/SettingsContext';
 
 export const GroundedSearch: React.FC = () => {
+  const { settings } = useSettings();
   const [prompt, setPrompt] = useState('');
   const [useMaps, setUseMaps] = useState(false);
-  // FIX: Renamed `location` to `userLocation` to avoid potential conflicts with the global `window.location`.
   const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
-  // FIX: The union with `null` must be inside the generic type brackets for `useState`.
   const [response, setResponse] = useState<{text: string, chunks: any[]} | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +39,12 @@ export const GroundedSearch: React.FC = () => {
     setResponse(null);
 
     try {
-      const result = await groundedSearch(prompt, useMaps, useMaps && userLocation ? userLocation : undefined);
+      const location = useMaps && userLocation ? userLocation : undefined;
+      const result = await groundedSearch(prompt, useMaps, settings, location);
       setResponse(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Grounded search failed:', err);
-      setError('Failed to get a response. Please try again.');
+      setError(`Failed to get a response: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

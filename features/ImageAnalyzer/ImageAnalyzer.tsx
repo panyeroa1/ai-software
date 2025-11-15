@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { analyzeImage } from '../../services/geminiService';
+import { analyzeImage } from '../../services/aiService';
 import { FileInput } from '../../components/common/FileInput';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
+import { useSettings } from '../../context/SettingsContext';
 
 const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> => {
   return new Promise((resolve, reject) => {
@@ -19,6 +20,7 @@ const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> =
 };
 
 export const ImageAnalyzer: React.FC = () => {
+  const { settings } = useSettings();
   const [image, setImage] = useState<{ file: File; url: string; base64: { data: string; mimeType: string } } | null>(null);
   const [prompt, setPrompt] = useState('Describe this image in detail.');
   const [analysis, setAnalysis] = useState<string | null>(null);
@@ -39,11 +41,11 @@ export const ImageAnalyzer: React.FC = () => {
     setAnalysis(null);
 
     try {
-      const result = await analyzeImage(prompt, image.base64);
+      const result = await analyzeImage(prompt, image.base64, settings);
       setAnalysis(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Image analysis failed:', err);
-      setError('Failed to analyze image. Please try again.');
+      setError(`Failed to analyze image: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

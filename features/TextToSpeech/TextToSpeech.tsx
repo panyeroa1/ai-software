@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { generateSpeech } from '../../services/geminiService';
+import { generateSpeech } from '../../services/aiService';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
+import { useSettings } from '../../context/SettingsContext';
 
 // Base64 decoding function for audio
 function decode(base64: string): Uint8Array {
@@ -37,6 +38,7 @@ async function decodeAudioData(
 
 
 export const TextToSpeech: React.FC = () => {
+  const { settings } = useSettings();
   const [text, setText] = useState('Hello! I am Gemini. It is a pleasure to meet you.');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,7 +64,7 @@ export const TextToSpeech: React.FC = () => {
     }
 
     try {
-      const base64Audio = await generateSpeech(text);
+      const base64Audio = await generateSpeech(text, settings);
       if (base64Audio) {
         const decodedBytes = decode(base64Audio);
         const audioBuffer = await decodeAudioData(decodedBytes, audioContext);
@@ -75,9 +77,9 @@ export const TextToSpeech: React.FC = () => {
       } else {
         throw new Error('No audio data received.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('TTS failed:', err);
-      setError('Failed to generate speech. Please try again.');
+      setError(`Failed to generate speech: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -1,0 +1,117 @@
+
+import type { Settings, AspectRatio } from '../types';
+import * as gemini from './geminiService';
+import * as ollama from './providers/ollama';
+import type { LiveServerMessage } from '@google/genai';
+
+const NOT_SUPPORTED_ERROR = 'This feature is not supported by the selected provider.';
+
+type ChatHistory = { role: 'user' | 'assistant' | 'model'; parts: { text: string }[] }[];
+
+// Chat functions
+export const sendMessageToChat = async (message: string, settings: Settings, history: ChatHistory): Promise<string> => {
+    switch(settings.provider) {
+        case 'gemini': {
+             // FIX: Implement stateful chat for Gemini by passing the history.
+             // The history from Chatbot.tsx includes the current message.
+             // We separate it because Gemini's `createChat` takes history, and `sendMessage` takes the new message.
+             const historyWithoutCurrent = history.slice(0, -1);
+             
+             // Map roles for Gemini: 'assistant' -> 'model', 'user' -> 'user'
+             const geminiHistory = historyWithoutCurrent.map(m => ({
+                 role: m.role === 'assistant' ? 'model' : 'user',
+                 parts: m.parts,
+             }));
+
+             const chat = gemini.createChat(geminiHistory);
+             const response = await gemini.sendMessageToChat(chat, message);
+             return response.text;
+        }
+        case 'ollama_cloud':
+        case 'ollama_self_hosted':
+            return ollama.sendMessage(message, settings, history);
+        default:
+            throw new Error('Invalid provider selected');
+    }
+};
+
+// Image generation
+export const generateImage = async (prompt: string, aspectRatio: AspectRatio, settings: Settings): Promise<string> => {
+    if (settings.provider === 'gemini') {
+        return gemini.generateImage(prompt, aspectRatio);
+    }
+    throw new Error(NOT_SUPPORTED_ERROR);
+}
+
+// Image editing
+export const editImage = async (prompt: string, image: { data: string; mimeType: string }, settings: Settings): Promise<string | null> => {
+     if (settings.provider === 'gemini') {
+        return gemini.editImage(prompt, image);
+    }
+    throw new Error(NOT_SUPPORTED_ERROR);
+}
+
+// Image analysis
+export const analyzeImage = async (prompt: string, image: { data: string; mimeType: string }, settings: Settings): Promise<string> => {
+    switch(settings.provider) {
+        case 'gemini':
+            return gemini.analyzeImage(prompt, image);
+        case 'ollama_cloud':
+        case 'ollama_self_hosted':
+            return ollama.analyzeImage(prompt, image, settings);
+        default:
+            throw new Error('Invalid provider selected');
+    }
+}
+
+// Video analysis
+export const analyzeVideoFrames = async (prompt: string, frames: { data: string, mimeType: string }[], settings: Settings): Promise<string> => {
+     if (settings.provider === 'gemini') {
+        return gemini.analyzeVideoFrames(prompt, frames);
+    }
+    throw new Error(NOT_SUPPORTED_ERROR);
+}
+
+// Grounded Search
+export const groundedSearch = async (prompt: string, useMaps: boolean, settings: Settings, location?: {latitude: number, longitude: number}): Promise<{text: string, chunks: any[]}> => {
+     if (settings.provider === 'gemini') {
+        return gemini.groundedSearch(prompt, useMaps, location);
+    }
+    throw new Error(NOT_SUPPORTED_ERROR);
+}
+
+// Complex Query
+export const complexQuery = async (prompt: string, settings: Settings): Promise<string> => {
+     switch(settings.provider) {
+        case 'gemini':
+            return gemini.complexQuery(prompt);
+        case 'ollama_cloud':
+        case 'ollama_self_hosted':
+            // Ollama doesn't have a specific "thinking budget" but we can route it to the chat endpoint
+            return ollama.sendMessage(prompt, settings, [{role: 'user', parts: [{text: prompt}]}]);
+        default:
+            throw new Error('Invalid provider selected');
+    }
+}
+
+// Text to Speech
+export const generateSpeech = async (text: string, settings: Settings): Promise<string | null> => {
+     if (settings.provider === 'gemini') {
+        return gemini.generateSpeech(text);
+    }
+    throw new Error(NOT_SUPPORTED_ERROR);
+}
+
+// Audio Transcription
+export const createLiveSession = (callbacks: {
+    onopen: () => void;
+    onmessage: (message: LiveServerMessage) => void;
+    onerror: (e: ErrorEvent) => void;
+    onclose: (e: CloseEvent) => void;
+}, settings: Settings) => {
+     if (settings.provider === 'gemini') {
+        return gemini.createLiveSession(callbacks);
+    }
+    // Live sessions are very specific to the provider's SDK, so we throw here for Ollama.
+    return Promise.reject(new Error(NOT_SUPPORTED_ERROR));
+};

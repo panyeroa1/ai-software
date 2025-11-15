@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
-import { complexQuery } from '../../services/geminiService';
+import { complexQuery } from '../../services/aiService';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
+import { useSettings } from '../../context/SettingsContext';
 
 export const ComplexQuery: React.FC = () => {
+  const { settings } = useSettings();
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,11 +19,11 @@ export const ComplexQuery: React.FC = () => {
     setResponse(null);
 
     try {
-      const result = await complexQuery(prompt);
+      const result = await complexQuery(prompt, settings);
       setResponse(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Complex query failed:', err);
-      setError('Failed to get a response. Please try a different query.');
+      setError(`Failed to get a response: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -1,18 +1,27 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { createChat, sendMessageToChat } from '../../services/geminiService';
+import { sendMessageToChat } from '../../services/aiService';
 import { supabase } from '../../services/supabaseClient';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
 import { Icon } from '../../components/Icon';
-import type { Chat } from '@google/genai';
+import { useSettings } from '../../context/SettingsContext';
 
 interface Message {
   sender: 'user' | 'bot';
   text: string;
 }
 
+// Map to Ollama's message format
+// FIX: Use 'as const' to prevent type widening on roleMap values. This ensures
+// the role property is correctly typed for the ChatHistory type.
+const roleMap = {
+  user: 'user',
+  bot: 'assistant'
+} as const;
+
 export const Chatbot: React.FC = () => {
-  const [chat, setChat] = useState<Chat | null>(null);
+  const { settings } = useSettings();
   const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const [messages, setMessages] = useState<Message[]>([]);
   const [prompt, setPrompt] = useState('');
@@ -21,9 +30,8 @@ export const Chatbot: React.FC = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setChat(createChat());
-  }, [sessionId]); // Re-create chat when session changes
+  // Gemini chat instance is not needed anymore for the component state
+  // as the new aiService will handle provider logic.
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -74,38 +82,44 @@ export const Chatbot: React.FC = () => {
   useEffect(scrollToBottom, [messages]);
 
   const handleSendMessage = async () => {
-    if (!chat || prompt.trim() === '') return;
+    if (prompt.trim() === '') return;
 
     const userMessageText = prompt;
     const userMessage: Message = { sender: 'user', text: userMessageText };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setPrompt('');
     setIsLoading(true);
 
     try {
-      // 1. Save user message
+      // 1. Save user message to DB
       const { error: userInsertError } = await supabase
         .from('messages')
         .insert({ session_id: sessionId, sender: 'user', text: userMessageText });
       if (userInsertError) throw userInsertError;
 
-      // 2. Get bot response
-      const response = await sendMessageToChat(chat, userMessageText);
-      const botMessage: Message = { sender: 'bot', text: response.text };
+      // 2. Get bot response via the new aiService
+      // For Ollama, we need to pass the history
+      const historyForProvider = newMessages.map(m => ({
+          role: roleMap[m.sender],
+          parts: [{ text: m.text }]
+      }));
+      
+      const responseText = await sendMessageToChat(prompt, settings, historyForProvider);
+      
+      const botMessage: Message = { sender: 'bot', text: responseText };
       setMessages((prev) => [...prev, botMessage]);
 
-      // 3. Save bot message
+      // 3. Save bot message to DB
       const { error: botInsertError } = await supabase
         .from('messages')
-        .insert({ session_id: sessionId, sender: 'bot', text: response.text });
+        .insert({ session_id: sessionId, sender: 'bot', text: responseText });
       if (botInsertError) throw botInsertError;
 
     } catch (error: any) {
       console.error('An error occurred in the chat flow:', error.message);
-      const errorMessage: Message = {
-        sender: 'bot',
-        text: `Sorry, an error occurred while saving the message. Please check the console for details.`
-      };
+      const errorMessageText = `An error occurred: ${error.message}. Check the console or your provider settings.`;
+      const errorMessage: Message = { sender: 'bot', text: errorMessageText };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);

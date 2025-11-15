@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { createLiveSession } from '../../services/geminiService';
+import { createLiveSession } from '../../services/aiService';
 import { Icon } from '../../components/Icon';
-// FIX: Removed non-exported type `LiveSession` from import.
 import type { Blob, LiveServerMessage } from '@google/genai';
+import { useSettings } from '../../context/SettingsContext';
 
 function encode(bytes: Uint8Array): string {
     let binary = '';
@@ -27,11 +27,11 @@ function createBlob(data: Float32Array): Blob {
 }
 
 export const AudioTranscription: React.FC = () => {
+    const { settings } = useSettings();
     const [isRecording, setIsRecording] = useState(false);
     const [transcription, setTranscription] = useState('');
     const [error, setError] = useState<string | null>(null);
     
-    // FIX: Inferred session promise type from the `createLiveSession` function's return type.
     const sessionPromiseRef = useRef<ReturnType<typeof createLiveSession> | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -73,7 +73,7 @@ export const AudioTranscription: React.FC = () => {
             
             audioContextRef.current = new (window.AudioContext)({ sampleRate: 16000 });
             
-            sessionPromiseRef.current = createLiveSession({
+            const callbacks = {
                 onopen: () => {
                     if (!audioContextRef.current || !streamRef.current) return;
                     
@@ -107,11 +107,13 @@ export const AudioTranscription: React.FC = () => {
                 onclose: () => {
                     // console.log('Live session closed.');
                 },
-            });
+            };
 
-        } catch (err) {
+            sessionPromiseRef.current = createLiveSession(callbacks, settings);
+
+        } catch (err: any) {
             console.error('Failed to start recording:', err);
-            setError('Could not access microphone. Please grant permission and try again.');
+            setError(`Could not access microphone: ${err.message}`);
             setIsRecording(false);
         }
     };

@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
-import { generateImage } from '../../services/geminiService';
+import { generateImage } from '../../services/aiService';
 import { PromptInput } from '../../components/common/PromptInput';
 import { Spinner } from '../../components/Spinner';
 import type { AspectRatio } from '../../types';
 import { ASPECT_RATIOS } from '../../constants';
+import { useSettings } from '../../context/SettingsContext';
 
 export const ImageGenerator: React.FC = () => {
+  const { settings } = useSettings();
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +22,11 @@ export const ImageGenerator: React.FC = () => {
     setImageUrl(null);
 
     try {
-      const base64Image = await generateImage(prompt, aspectRatio);
+      const base64Image = await generateImage(prompt, aspectRatio, settings);
       setImageUrl(`data:image/jpeg;base64,${base64Image}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Image generation failed:', err);
-      setError('Failed to generate image. Please try again.');
+      setError(`Failed to generate image: ${err.message}`);
     } finally {
       setIsLoading(false);
     }

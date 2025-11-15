@@ -1,15 +1,25 @@
 
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality, LiveServerMessage } from "@google/genai";
-import type { AspectRatio } from '../types';
+import type { AspectRatio } from '../../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
+let ai: GoogleGenAI | null = null;
+
+const getAi = () => {
+    if (!ai) {
+        if (!process.env.API_KEY) {
+            throw new Error("API_KEY environment variable is not set.");
+        }
+        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return ai;
 }
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const createChat = (): Chat => {
-  return ai.chats.create({
+
+// FIX: Update createChat to accept history to enable stateful conversations.
+export const createChat = (history?: { role: string; parts: { text: string }[] }[]): Chat => {
+  return getAi().chats.create({
     model: 'gemini-2.5-flash',
+    history,
   });
 };
 
@@ -18,7 +28,7 @@ export const sendMessageToChat = async (chat: Chat, message: string): Promise<Ge
 };
 
 export const generateImage = async (prompt: string, aspectRatio: AspectRatio): Promise<string> => {
-  const response = await ai.models.generateImages({
+  const response = await getAi().models.generateImages({
     model: 'imagen-4.0-generate-001',
     prompt,
     config: {
@@ -31,7 +41,7 @@ export const generateImage = async (prompt: string, aspectRatio: AspectRatio): P
 };
 
 export const editImage = async (prompt: string, image: { data: string; mimeType: string }): Promise<string | null> => {
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: {
       parts: [
@@ -51,7 +61,7 @@ export const editImage = async (prompt: string, image: { data: string; mimeType:
 };
 
 export const analyzeImage = async (prompt: string, image: { data: string; mimeType: string }): Promise<string> => {
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
       parts: [
@@ -68,7 +78,7 @@ export const analyzeVideoFrames = async (prompt: string, frames: { data: string,
     inlineData: { data: frame.data, mimeType: frame.mimeType }
   }));
 
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
       model: 'gemini-2.5-pro',
       contents: {
           parts: [{text: prompt}, ...imageParts]
@@ -89,7 +99,7 @@ export const groundedSearch = async (prompt: string, useMaps: boolean, location?
     };
   }
   
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
     config
@@ -102,7 +112,7 @@ export const groundedSearch = async (prompt: string, useMaps: boolean, location?
 };
 
 export const complexQuery = async (prompt: string): Promise<string> => {
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model: "gemini-2.5-pro",
     contents: prompt,
     config: { thinkingConfig: { thinkingBudget: 32768 } }
@@ -112,7 +122,7 @@ export const complexQuery = async (prompt: string): Promise<string> => {
 
 
 export const generateSpeech = async (text: string): Promise<string | null> => {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
         contents: { parts: [{ text: `Say this: ${text}` }] },
         config: {
@@ -134,7 +144,7 @@ export const createLiveSession = (callbacks: {
     onerror: (e: ErrorEvent) => void;
     onclose: (e: CloseEvent) => void;
 }) => {
-    return ai.live.connect({
+    return getAi().live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         callbacks,
         config: {
