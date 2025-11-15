@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createLiveSession } from '../../services/geminiService';
 import { Icon } from '../../components/Icon';
-import type { LiveSession, Blob, LiveServerMessage } from '@google/genai';
+// FIX: Removed non-exported type `LiveSession` from import.
+import type { Blob, LiveServerMessage } from '@google/genai';
 
 function encode(bytes: Uint8Array): string {
     let binary = '';
@@ -30,7 +31,8 @@ export const AudioTranscription: React.FC = () => {
     const [transcription, setTranscription] = useState('');
     const [error, setError] = useState<string | null>(null);
     
-    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+    // FIX: Inferred session promise type from the `createLiveSession` function's return type.
+    const sessionPromiseRef = useRef<ReturnType<typeof createLiveSession> | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);

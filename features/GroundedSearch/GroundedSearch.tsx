@@ -37,10 +37,10 @@ export const GroundedSearch: React.FC = () => {
     setResponse(null);
 
     try {
-      // FIX: Ensure null is not passed for location, as the service expects undefined.
-      const result = await groundedSearch(prompt, useMaps, useMaps ? (location || undefined) : undefined);
+      // FIX: Ensure null is not passed for location; pass undefined instead.
+      const result = await groundedSearch(prompt, useMaps, useMaps && location ? location : undefined);
       setResponse(result);
-    } catch (err) {
+    } catch (err)      {
       console.error('Grounded search failed:', err);
       setError('Failed to get a response. Please try again.');
     } finally {
