@@ -1,0 +1,7 @@
+{
+  "name": "Gemini Multi-Tool Suite",
+  "description": "An all-in-one application showcasing the power of the Gemini API, including image generation and editing, chat, grounded search, complex reasoning, text-to-speech, audio transcription, and video analysis.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

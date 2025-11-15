@@ -1,0 +1,148 @@
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createLiveSession } from '../../services/geminiService';
+import { Icon } from '../../components/Icon';
+import type { LiveSession, Blob, LiveServerMessage } from '@google/genai';
+
+function encode(bytes: Uint8Array): string {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+function createBlob(data: Float32Array): Blob {
+    const l = data.length;
+    const int16 = new Int16Array(l);
+    for (let i = 0; i < l; i++) {
+      int16[i] = data[i] * 32768;
+    }
+    return {
+      data: encode(new Uint8Array(int16.buffer)),
+      mimeType: 'audio/pcm;rate=16000',
+    };
+}
+
+export const AudioTranscription: React.FC = () => {
+    const [isRecording, setIsRecording] = useState(false);
+    const [transcription, setTranscription] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    
+    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+    const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+
+    const stopRecording = useCallback(() => {
+        setIsRecording(false);
+
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        if (scriptProcessorRef.current) {
+            scriptProcessorRef.current.disconnect();
+            scriptProcessorRef.current = null;
+        }
+        if (sourceRef.current) {
+            sourceRef.current.disconnect();
+            sourceRef.current = null;
+        }
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        if (sessionPromiseRef.current) {
+            sessionPromiseRef.current.then(session => session.close());
+            sessionPromiseRef.current = null;
+        }
+    }, []);
+
+    const startRecording = async () => {
+        setIsRecording(true);
+        setError(null);
+        setTranscription('');
+
+        try {
+            streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            audioContextRef.current = new (window.AudioContext)({ sampleRate: 16000 });
+            
+            sessionPromiseRef.current = createLiveSession({
+                onopen: () => {
+                    if (!audioContextRef.current || !streamRef.current) return;
+                    
+                    sourceRef.current = audioContextRef.current.createMediaStreamSource(streamRef.current);
+                    scriptProcessorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+                    
+                    scriptProcessorRef.current.onaudioprocess = (audioProcessingEvent) => {
+                        const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
+                        const pcmBlob = createBlob(inputData);
+                        if (sessionPromiseRef.current) {
+                            sessionPromiseRef.current.then((session) => {
+                                session.sendRealtimeInput({ media: pcmBlob });
+                            });
+                        }
+                    };
+                    
+                    sourceRef.current.connect(scriptProcessorRef.current);
+                    scriptProcessorRef.current.connect(audioContextRef.current.destination);
+                },
+                onmessage: (message: LiveServerMessage) => {
+                    if (message.serverContent?.inputTranscription) {
+                        const text = message.serverContent.inputTranscription.text;
+                        setTranscription(prev => prev + text);
+                    }
+                },
+                onerror: (e: ErrorEvent) => {
+                    console.error('Live session error:', e);
+                    setError('An error occurred during transcription.');
+                    stopRecording();
+                },
+                onclose: () => {
+                    // console.log('Live session closed.');
+                },
+            });
+
+        } catch (err) {
+            console.error('Failed to start recording:', err);
+            setError('Could not access microphone. Please grant permission and try again.');
+            setIsRecording(false);
+        }
+    };
+    
+    // Cleanup on component unmount
+    useEffect(() => {
+      return () => {
+        stopRecording();
+      };
+    }, [stopRecording]);
+
+    return (
+        <div className="flex flex-col h-full space-y-4">
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-2">Audio Transcription</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Click the microphone to start transcribing your speech in real-time.</p>
+            </div>
+            
+            <div className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto">
+                {error && <p className="text-red-500">{error}</p>}
+                <p className="whitespace-pre-wrap">{transcription || (isRecording ? "Listening..." : "Transcription will appear here.")}</p>
+            </div>
+            
+            <div className="p-4 flex items-center justify-center">
+                <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    className={`w-20 h-20 rounded-full flex items-center justify-center transition-colors ${
+                        isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primary/90'
+                    }`}
+                >
+                    <Icon name={isRecording ? 'stop' : 'mic'} className="w-10 h-10 text-white" />
+                </button>
+            </div>
+        </div>
+    );
+};
