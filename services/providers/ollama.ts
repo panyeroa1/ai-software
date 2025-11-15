@@ -95,3 +95,38 @@ export const analyzeImage = async (prompt: string, image: { data: string; mimeTy
     const data = await response.json();
     return data.message.content;
 };
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      // result is "data:audio/wav;base64,...." - we only want the part after the comma
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+export const generateSpeech = async (text: string, settings: Settings): Promise<string | null> => {
+    if (!settings.ollamaTtsUrl) {
+        throw new Error('Ollama TTS URL is not configured in settings.');
+    }
+
+    // A common pattern for TTS servers like Piper is to pass text as a query parameter
+    const url = new URL(settings.ollamaTtsUrl);
+    url.searchParams.append('text', text);
+
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`TTS server error (${response.status}): ${errorText}`);
+    }
+
+    const audioBlob = await response.blob();
+    const base64Audio = await blobToBase64(audioBlob);
+
+    return base64Audio;
+};

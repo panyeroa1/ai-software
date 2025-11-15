@@ -16,7 +16,7 @@ function decode(base64: string): Uint8Array {
   return bytes;
 }
 
-// Custom PCM audio decoder
+// Custom PCM audio decoder for Gemini
 async function decodeAudioData(
   data: Uint8Array,
   ctx: AudioContext,
@@ -36,57 +36,8 @@ async function decodeAudioData(
   return buffer;
 }
 
-
-export const TextToSpeech: React.FC = () => {
-  const { settings } = useSettings();
-  const [text, setText] = useState('Hello! I am Gemini. It is a pleasure to meet you.');
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const audioContext = new (window.AudioContext)({ sampleRate: 24000 });
-
-  useEffect(() => {
-    return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
-
-  const handleSubmit = async () => {
-    if (text.trim() === '') return;
-    setIsLoading(true);
-    setError(null);
-    if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-        setAudioUrl(null);
-    }
-
-    try {
-      const base64Audio = await generateSpeech(text, settings);
-      if (base64Audio) {
-        const decodedBytes = decode(base64Audio);
-        const audioBuffer = await decodeAudioData(decodedBytes, audioContext);
-        
-        // Convert AudioBuffer to WAV blob
-        const wavBlob = bufferToWave(audioBuffer, audioBuffer.length);
-        const url = URL.createObjectURL(wavBlob);
-        setAudioUrl(url);
-
-      } else {
-        throw new Error('No audio data received.');
-      }
-    } catch (err: any) {
-      console.error('TTS failed:', err);
-      setError(`Failed to generate speech: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Helper function to convert AudioBuffer to a WAV file blob
-  const bufferToWave = (abuffer: AudioBuffer, len: number) => {
+// Helper function to convert AudioBuffer to a WAV file blob for Gemini
+const bufferToWave = (abuffer: AudioBuffer, len: number) => {
     let numOfChan = abuffer.numberOfChannels,
         length = len * numOfChan * 2 + 44,
         buffer = new ArrayBuffer(length),
@@ -135,6 +86,68 @@ export const TextToSpeech: React.FC = () => {
     function setUint32(data: number) {
       view.setUint32(pos, data, true);
       pos += 4;
+    }
+};
+
+export const TextToSpeech: React.FC = () => {
+  const { settings } = useSettings();
+  const [text, setText] = useState('Hello! I am Gemini. It is a pleasure to meet you.');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // AudioContext is only needed for Gemini's raw PCM data
+  const audioContextRef = React.useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if(audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+    };
+  }, [audioUrl]);
+
+  const handleSubmit = async () => {
+    if (text.trim() === '') return;
+    setIsLoading(true);
+    setError(null);
+    if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+        setAudioUrl(null);
+    }
+
+    try {
+      const base64Audio = await generateSpeech(text, settings);
+      if (base64Audio) {
+        const decodedBytes = decode(base64Audio);
+        let audioBlob: Blob;
+
+        if (settings.provider === 'ollama_self_hosted') {
+            // The self-hosted server returns a complete WAV file
+            audioBlob = new Blob([decodedBytes], { type: 'audio/wav' });
+        } else {
+            // Gemini returns raw PCM data, which we need to wrap in a WAV container
+            if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+                audioContextRef.current = new (window.AudioContext)({ sampleRate: 24000 });
+            }
+            const audioBuffer = await decodeAudioData(decodedBytes, audioContextRef.current);
+            audioBlob = bufferToWave(audioBuffer, audioBuffer.length);
+        }
+        
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+
+      } else {
+        throw new Error('No audio data received.');
+      }
+    } catch (err: any) {
+      console.error('TTS failed:', err);
+      setError(`Failed to generate speech: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 

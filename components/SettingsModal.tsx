@@ -60,7 +60,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <InputField label="API Key" name="ollamaCloudKey" value={localSettings.ollamaCloudKey} onChange={handleInputChange} type="password" placeholder="Enter your Ollama Cloud API key" />
               )}
                {localSettings.provider === 'ollama_self_hosted' && (
-                <InputField label="Server URL" name="ollamaSelfHostedUrl" value={localSettings.ollamaSelfHostedUrl} onChange={handleInputChange} placeholder="e.g., http://localhost:11434" />
+                <>
+                  <InputField label="Server URL" name="ollamaSelfHostedUrl" value={localSettings.ollamaSelfHostedUrl} onChange={handleInputChange} placeholder="e.g., http://localhost:11434" />
+                  <InputField label="TTS Server URL" name="ollamaTtsUrl" value={localSettings.ollamaTtsUrl} onChange={handleInputChange} placeholder="e.g., http://localhost:5002/api/tts" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Note: Text-to-Speech requires a separate TTS server (e.g., Piper) running.
+                  </p>
+                </>
               )}
                <InputField label="Model Name" name="ollamaModel" value={localSettings.ollamaModel} onChange={handleInputChange} placeholder="e.g., llava:latest or llama3" />
                <p className="text-xs text-gray-500 dark:text-gray-400">

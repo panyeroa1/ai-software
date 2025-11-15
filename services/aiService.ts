@@ -96,10 +96,14 @@ export const complexQuery = async (prompt: string, settings: Settings): Promise<
 
 // Text to Speech
 export const generateSpeech = async (text: string, settings: Settings): Promise<string | null> => {
-     if (settings.provider === 'gemini') {
-        return gemini.generateSpeech(text);
+    switch(settings.provider) {
+        case 'gemini':
+            return gemini.generateSpeech(text);
+        case 'ollama_self_hosted':
+            return ollama.generateSpeech(text, settings);
+        default:
+             throw new Error(NOT_SUPPORTED_ERROR);
     }
-    throw new Error(NOT_SUPPORTED_ERROR);
 }
 
 // Audio Transcription

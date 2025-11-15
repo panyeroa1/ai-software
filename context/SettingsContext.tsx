@@ -14,6 +14,7 @@ const DEFAULTS: Settings = {
   ollamaCloudKey: '',
   ollamaSelfHostedUrl: 'http://127.0.0.1:11434',
   ollamaModel: 'llava:latest',
+  ollamaTtsUrl: 'http://127.0.0.1:5002/api/tts',
 };
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

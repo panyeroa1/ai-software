@@ -8,6 +8,7 @@ export interface Settings {
   ollamaCloudKey: string;
   ollamaSelfHostedUrl: string;
   ollamaModel: string;
+  ollamaTtsUrl: string;
 }
 
 export interface Feature {

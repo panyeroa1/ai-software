@@ -58,7 +58,7 @@ export const FEATURES: Feature[] = [
     name: 'Text to Speech',
     icon: <Icon name="audio" />,
     description: 'Convert text into natural-sounding speech.',
-    supportedProviders: ['gemini'],
+    supportedProviders: ['gemini', 'ollama_self_hosted'],
   },
   {
     id: 'audio-transcription',
