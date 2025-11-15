@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { groundedSearch } from '../../services/geminiService';
 import { PromptInput } from '../../components/common/PromptInput';
@@ -8,16 +7,18 @@ import { Icon } from '../../components/Icon';
 export const GroundedSearch: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [useMaps, setUseMaps] = useState(false);
-  const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
-  const [response, setResponse] = useState<{text: string, chunks: any[]}> | null>(null);
+  // FIX: Renamed `location` to `userLocation` to avoid potential conflicts with the global `window.location`.
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  // FIX: The union with `null` must be inside the generic type brackets for `useState`.
+  const [response, setResponse] = useState<{text: string, chunks: any[]} | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (useMaps && !location) {
+    if (useMaps && !userLocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
+          setUserLocation({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
@@ -28,7 +29,7 @@ export const GroundedSearch: React.FC = () => {
         }
       );
     }
-  }, [useMaps, location]);
+  }, [useMaps, userLocation]);
 
   const handleSubmit = async () => {
     if (prompt.trim() === '') return;
@@ -37,10 +38,9 @@ export const GroundedSearch: React.FC = () => {
     setResponse(null);
 
     try {
-      // FIX: Ensure null is not passed for location; pass undefined instead.
-      const result = await groundedSearch(prompt, useMaps, useMaps && location ? location : undefined);
+      const result = await groundedSearch(prompt, useMaps, useMaps && userLocation ? userLocation : undefined);
       setResponse(result);
-    } catch (err)      {
+    } catch (err) {
       console.error('Grounded search failed:', err);
       setError('Failed to get a response. Please try again.');
     } finally {
@@ -113,7 +113,7 @@ export const GroundedSearch: React.FC = () => {
           value={prompt}
           onChange={setPrompt}
           onSubmit={handleSubmit}
-          disabled={isLoading || (useMaps && !location)}
+          disabled={isLoading || (useMaps && !userLocation)}
           placeholder={useMaps ? "e.g., Good Italian restaurants nearby" : "e.g., Who won the last F1 race?"}
         />
       </div>

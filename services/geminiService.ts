@@ -114,7 +114,7 @@ export const complexQuery = async (prompt: string): Promise<string> => {
 export const generateSpeech = async (text: string): Promise<string | null> => {
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: `Say this: ${text}` }] }],
+        contents: { parts: [{ text: `Say this: ${text}` }] },
         config: {
             responseModalities: [Modality.AUDIO],
             speechConfig: {
