@@ -1,7 +1,8 @@
-import type { Settings, AspectRatio } from '../types';
+import type { Settings, AspectRatio, SpeechConfig } from '../types';
 import * as gemini from './geminiService';
 import * as ollama from './providers/ollama';
 import type { LiveServerMessage } from '@google/genai';
+import { CHATBOT_SYSTEM_PROMPT } from '../constants';
 
 const NOT_SUPPORTED_ERROR = 'This feature is not supported by the selected provider.';
 
@@ -22,13 +23,13 @@ export const sendMessageToChat = async (message: string, settings: Settings, his
                  parts: m.parts,
              }));
 
-             const chat = gemini.createChat(geminiHistory);
+             const chat = gemini.createChat(geminiHistory, CHATBOT_SYSTEM_PROMPT);
              const response = await gemini.sendMessageToChat(chat, message);
              return response.text;
         }
         case 'ollama_cloud':
         case 'ollama_self_hosted':
-            return ollama.sendMessage(message, settings, history);
+            return ollama.sendMessage(message, settings, history, CHATBOT_SYSTEM_PROMPT);
         default:
             throw new Error('Invalid provider selected');
     }
@@ -83,29 +84,30 @@ export const groundedSearch = async (prompt: string, useMaps: boolean, settings:
 export const complexQuery = async (prompt: string, settings: Settings): Promise<string> => {
      switch(settings.provider) {
         case 'gemini':
-            return gemini.complexQuery(prompt);
+            return gemini.complexQuery(prompt, CHATBOT_SYSTEM_PROMPT);
         case 'ollama_cloud':
         case 'ollama_self_hosted':
             // Ollama doesn't have a specific "thinking budget" but we can route it to the chat endpoint
-            return ollama.sendMessage(prompt, settings, [{role: 'user', parts: [{text: prompt}]}]);
+            return ollama.sendMessage(prompt, settings, [{role: 'user', parts: [{text: prompt}]}], CHATBOT_SYSTEM_PROMPT);
         default:
             throw new Error('Invalid provider selected');
     }
 }
 
 // Text to Speech
-export const generateSpeech = async (text: string, settings: Settings): Promise<string | null> => {
+export const generateSpeech = async (text: string, settings: Settings, config: SpeechConfig, audioFormat: 'wav' | 'mp3' = 'wav'): Promise<string | null> => {
     switch(settings.provider) {
         case 'gemini':
-            return gemini.generateSpeech(text);
+            return gemini.generateSpeech(text, config);
         case 'ollama_self_hosted':
-            return ollama.generateSpeech(text, settings);
+            // Ollama provider does not support multi-speaker, so we ignore the config.
+            return ollama.generateSpeech(text, settings, audioFormat);
         default:
              throw new Error(NOT_SUPPORTED_ERROR);
     }
 }
 
-// Audio Transcription
+// Audio Transcription & Voice Assistant
 export const createLiveSession = (callbacks: {
     onopen: () => void;
     onmessage: (message: LiveServerMessage) => void;
@@ -113,7 +115,7 @@ export const createLiveSession = (callbacks: {
     onclose: (e: CloseEvent) => void;
 }, settings: Settings) => {
      if (settings.provider === 'gemini') {
-        return gemini.createLiveSession(callbacks);
+        return gemini.createLiveSession(callbacks, CHATBOT_SYSTEM_PROMPT);
     }
     // Live sessions are very specific to the provider's SDK, so we throw here for Ollama.
     return Promise.reject(new Error(NOT_SUPPORTED_ERROR));

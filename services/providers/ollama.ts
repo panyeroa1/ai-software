@@ -34,17 +34,26 @@ const formatHistory = (history: ChatHistory): OllamaMessage[] => {
     }));
 };
 
-export const sendMessage = async (message: string, settings: Settings, history: ChatHistory): Promise<string> => {
+export const sendMessage = async (message: string, settings: Settings, history: ChatHistory, systemPrompt?: string): Promise<string> => {
     const { url, headers } = getOllamaConfig(settings);
     const endpoint = new URL('/api/chat', url).toString();
 
     const messages = formatHistory(history);
     
-    const body = {
-        model: settings.ollamaModel || 'llama3', // Default to a text model
+    const body: {
+        model: string;
+        messages: OllamaMessage[];
+        stream: boolean;
+        system?: string;
+    } = {
+        model: settings.ollamaModel || 'llama3',
         messages: messages,
         stream: false,
     };
+
+    if (systemPrompt) {
+        body.system = systemPrompt;
+    }
 
     const response = await fetch(endpoint, {
         method: 'POST',
@@ -107,14 +116,14 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-export const generateSpeech = async (text: string, settings: Settings): Promise<string | null> => {
+export const generateSpeech = async (text: string, settings: Settings, audioFormat: 'wav' | 'mp3' = 'wav'): Promise<string | null> => {
     if (!settings.ollamaTtsUrl) {
         throw new Error('Ollama TTS URL is not configured in settings.');
     }
 
-    // A common pattern for TTS servers like Piper is to pass text as a query parameter
     const url = new URL(settings.ollamaTtsUrl);
     url.searchParams.append('text', text);
+    url.searchParams.append('format', audioFormat);
 
     const response = await fetch(url.toString());
 
@@ -140,9 +149,17 @@ export const listModels = async (settings: Settings): Promise<string[]> => {
     try {
         const endpoint = new URL('/api/tags', url).toString();
 
+        // For the cloud provider, a "Failed to fetch" error often indicates a CORS issue,
+        // especially when custom headers like 'Authorization' are sent, which triggers a
+        // preflight OPTIONS request. The documentation for this specific endpoint (`/api/tags`)
+        // does not show any required headers. By sending a "simple" request without them,
+        // we can avoid the preflight and potentially bypass the CORS issue.
+        // Other endpoints like `/api/chat` will still use the headers as needed.
+        const requestHeaders = settings.provider === 'ollama_cloud' ? undefined : headers;
+
         const response = await fetch(endpoint, {
             method: 'GET',
-            headers: headers,
+            headers: requestHeaders,
         });
 
         if (!response.ok) {

@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Chat, GenerateContentResponse, Modality, LiveServerMessage } from "@google/genai";
-import type { AspectRatio } from '../../types';
+import type { AspectRatio, SpeechConfig } from '../types';
 
 let ai: GoogleGenAI | null = null;
 
@@ -15,11 +14,15 @@ const getAi = () => {
 }
 
 
-// FIX: Update createChat to accept history to enable stateful conversations.
-export const createChat = (history?: { role: string; parts: { text: string }[] }[]): Chat => {
+// FIX: Update createChat to accept history and systemInstruction to enable stateful and configurable conversations.
+export const createChat = (
+  history?: { role: string; parts: { text: string }[] }[],
+  systemInstruction?: string
+): Chat => {
   return getAi().chats.create({
     model: 'gemini-2.5-flash',
     history,
+    config: systemInstruction ? { systemInstruction } : undefined,
   });
 };
 
@@ -111,45 +114,73 @@ export const groundedSearch = async (prompt: string, useMaps: boolean, location?
   };
 };
 
-export const complexQuery = async (prompt: string): Promise<string> => {
+export const complexQuery = async (prompt: string, systemInstruction?: string): Promise<string> => {
   const response = await getAi().models.generateContent({
     model: "gemini-2.5-pro",
     contents: prompt,
-    config: { thinkingConfig: { thinkingBudget: 32768 } }
+    config: { 
+      systemInstruction,
+      thinkingConfig: { thinkingBudget: 32768 } 
+    }
   });
   return response.text;
 };
 
 
-export const generateSpeech = async (text: string): Promise<string | null> => {
+export const generateSpeech = async (text: string, config: SpeechConfig): Promise<string | null> => {
+    let speechConfigPayload: any;
+
+    if (config.mode === 'single') {
+        speechConfigPayload = {
+            voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: config.voice },
+            },
+        };
+    } else { // multi-speaker
+        if (config.speakers.length !== 2) {
+            throw new Error("Multi-speaker TTS requires exactly two speakers.");
+        }
+        speechConfigPayload = {
+            multiSpeakerVoiceConfig: {
+                speakerVoiceConfigs: config.speakers.map(speaker => ({
+                    speaker: speaker.name,
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: speaker.voice }
+                    }
+                }))
+            }
+        };
+    }
+
     const response = await getAi().models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: { parts: [{ text: `Say this: ${text}` }] },
+        contents: { parts: [{ text }] },
         config: {
             responseModalities: [Modality.AUDIO],
-            speechConfig: {
-                voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: 'Kore' },
-                },
-            },
+            speechConfig: speechConfigPayload,
         },
     });
     const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     return audioData || null;
 };
 
-export const createLiveSession = (callbacks: {
-    onopen: () => void;
-    onmessage: (message: LiveServerMessage) => void;
-    onerror: (e: ErrorEvent) => void;
-    onclose: (e: CloseEvent) => void;
-}) => {
+export const createLiveSession = (
+    callbacks: {
+        onopen: () => void;
+        onmessage: (message: LiveServerMessage) => void;
+        onerror: (e: ErrorEvent) => void;
+        onclose: (e: CloseEvent) => void;
+    },
+    systemInstruction?: string
+) => {
     return getAi().live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         callbacks,
         config: {
             responseModalities: [Modality.AUDIO],
             inputAudioTranscription: {},
+            outputAudioTranscription: {},
+            systemInstruction,
         },
     });
 };

@@ -32,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ features, activeFeature, setAc
           <div className="flex items-center overflow-hidden">
             <Icon name="spark" className="h-8 w-8 text-primary flex-shrink-0" />
             <span className={`ml-2 text-xl font-bold text-gray-800 dark:text-white whitespace-nowrap transition-opacity duration-200 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
-              Gemini Suite
+              Eburon Suite
             </span>
           </div>
           <button className="md:hidden text-gray-500" onClick={() => setIsOpen(false)}>

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Chatbot } from './features/Chatbot/Chatbot';
@@ -10,6 +9,7 @@ import { GroundedSearch } from './features/GroundedSearch/GroundedSearch';
 import { ComplexQuery } from './features/ComplexQuery/ComplexQuery';
 import { TextToSpeech } from './features/TextToSpeech/TextToSpeech';
 import { AudioTranscription } from './features/AudioTranscription/AudioTranscription';
+import { VoiceAssistant } from './features/VoiceAssistant/VoiceAssistant';
 import type { Feature } from './types';
 import { FEATURES } from './constants';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
@@ -54,6 +54,8 @@ const AppContent: React.FC = () => {
     switch (activeFeature.id) {
       case 'chatbot':
         return <Chatbot />;
+      case 'voice-assistant':
+        return <VoiceAssistant />;
       case 'image-generator':
         return <ImageGenerator />;
       case 'image-editor':
